@@ -15,15 +15,7 @@ spec:
           adminPassword: "admin" # (We can seal this secret later)
           service:
             type: ClusterIP
-          ingress:
-            enabled: true
-            ingressClassName: traefik
-            hosts:
-              - grafana.homelab.internal # Change to your preferred local/external domain
-            tls:
-              - secretName: grafana-tls
-                hosts:
-                  - grafana.homelab.internal
+         
         prometheus:
           prometheusSpec:
             serviceMonitorSelectorNilUsesHelmValues: false
