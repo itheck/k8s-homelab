@@ -15,6 +15,12 @@ spec:
           adminPassword: "admin" # (We can seal this secret later)
           service:
             type: ClusterIP
+          ingress:
+            enabled: true
+            ingressClassName: "traefik" # (or nginx, depending on what controller your homelab uses)
+            hosts:
+              - grafana.home.arpa # or whatever domain/subdomain scheme you use
+            path: /
 
         prometheus:
           prometheusSpec:
