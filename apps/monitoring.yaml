@@ -25,6 +25,26 @@ spec:
         prometheus:
           prometheusSpec:
             serviceMonitorSelectorNilUsesHelmValues: false
+
+        kubeControllerManager:
+          enabled: true
+          endpoints:
+            - 10.0.0.21
+
+        kubeScheduler:
+          enabled: true
+          endpoints:
+            - 10.0.0.21
+
+        kubeEtcd:
+          enabled: true
+          endpoints:
+            - 10.0.0.21
+
+        kubeProxy:
+          enabled: true
+          endpoints:
+            - 10.0.0.21
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
