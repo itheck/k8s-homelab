@@ -15,7 +15,7 @@ spec:
           adminPassword: "admin" # (We can seal this secret later)
           service:
             type: ClusterIP
-         
+
         prometheus:
           prometheusSpec:
             serviceMonitorSelectorNilUsesHelmValues: false
@@ -28,3 +28,4 @@ spec:
       selfHeal: true
     syncOptions:
     - CreateNamespace=true
+    - ServerSideApply=true
