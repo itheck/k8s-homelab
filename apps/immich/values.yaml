@@ -28,5 +28,5 @@ redis:
   architecture: standalone
   image:
     registry: docker.io
-    repository: bitnami/redis
-    tag: "7.2-debian-12"
+    repository: redis
+    tag: 7.2-alpine
