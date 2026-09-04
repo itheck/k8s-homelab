@@ -9,8 +9,13 @@ immich:
       size: 200Gi
       storageClass: longhorn
 
+env:
+  REVERSE_GEOCODING_ENABLED: "false"
+
 machine-learning:
   enabled: true
+  image:
+    tag: v1.119.0-cuda
   resources:
     limits:
       nvidia.com/gpu: "1"
