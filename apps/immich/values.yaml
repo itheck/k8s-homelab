@@ -44,3 +44,15 @@ redis:
       - ""
       - "--appendonly"
       - "yes"
+    livenessProbe:
+      enabled: true
+      exec:
+        command:
+          - "redis-cli"
+          - "ping"
+    readinessProbe:
+      enabled: true
+      exec:
+        command:
+          - "redis-cli"
+          - "ping"
