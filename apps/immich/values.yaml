@@ -9,6 +9,8 @@ machine-learning:
   resources:
     limits:
       nvidia.com/gpu: "1"
+    requests:
+      nvidia.com/gpu: "1"
   env:
     CUDA_VISIBLE_DEVICES: "0"
 
@@ -24,3 +26,7 @@ postgresql:
 redis:
   enabled: true
   architecture: standalone
+  image:
+    registry: docker.io
+    repository: bitnami/redis
+    tag: "7.2"
