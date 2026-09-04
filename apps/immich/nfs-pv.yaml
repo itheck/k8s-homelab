@@ -15,8 +15,8 @@ spec:
     - timeo=600
     - retrans=2
   nfs:
-    path: /mnt/raid1/immich   # Update to your NFS export path
-    server: 192.168.1.X        # Update to your NFS Server IP
+    path: /mnt/yottamaster-raid1/immich
+    server: 10.0.0.11
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
