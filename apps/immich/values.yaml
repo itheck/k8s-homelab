@@ -2,7 +2,12 @@ immich:
   persistence:
     library:
       enabled: true
-      existingClaim: immich-library-pvc
+      existingClaim: immich-nfs-library-pvc
+    thumbs:
+      enabled: true
+      type: persistentVolumeClaim
+      size: 200Gi
+      storageClass: longhorn
 
 machine-learning:
   enabled: true
@@ -22,6 +27,7 @@ postgresql:
   persistence:
     enabled: true
     size: 20Gi
+    storageClass: longhorn
 
 redis:
   enabled: true
