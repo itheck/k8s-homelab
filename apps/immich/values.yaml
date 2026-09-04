@@ -39,4 +39,8 @@ redis:
   master:
     command:
       - "redis-server"
-    args: []
+    args:
+      - "--save"
+      - ""
+      - "--appendonly"
+      - "yes"
