@@ -1,0 +1,26 @@
+immich:
+  persistence:
+    library:
+      enabled: true
+      existingClaim: immich-library-pvc
+
+machine-learning:
+  enabled: true
+  resources:
+    limits:
+      nvidia.com/gpu: "1"
+  env:
+    CUDA_VISIBLE_DEVICES: "0"
+
+postgresql:
+  enabled: true
+  image:
+    repository: tensorchord/pgvecto-rs
+    tag: pg15-v0.2.1
+  persistence:
+    enabled: true
+    size: 20Gi
+
+redis:
+  enabled: true
+  architecture: standalone
