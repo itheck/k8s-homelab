@@ -45,14 +45,20 @@ redis:
       - "--appendonly"
       - "yes"
     livenessProbe:
-      enabled: true
-      exec:
-        command:
-          - "redis-cli"
-          - "ping"
+      enabled: false
     readinessProbe:
-      enabled: true
+      enabled: false
+    customLivenessProbe:
       exec:
         command:
-          - "redis-cli"
-          - "ping"
+          - redis-cli
+          - ping
+      initialDelaySeconds: 5
+      periodSeconds: 10
+    customReadinessProbe:
+      exec:
+        command:
+          - redis-cli
+          - ping
+      initialDelaySeconds: 5
+      periodSeconds: 10
