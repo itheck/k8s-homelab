@@ -14,7 +14,7 @@ spec:
       helm:
         valueFiles:
           - $values/apps/immich/values.yaml
-    - repoURL: 'https://github.com/YOUR_GITHUB_USERNAME/k8s-homelab.git'
+    - repoURL: 'https://github.com/itheck/k8s-homelab.git'
       targetRevision: HEAD
       ref: values
   destination:
