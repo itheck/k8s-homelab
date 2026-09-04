@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-engine
+  namespace: ai-stack
+  labels:
+    app: vllm-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-engine
+  template:
+    metadata:
+      labels:
+        app: vllm-engine
+    spec:
+      containers:
+      - name: vllm
+        image: vllm/vllm-openai:v0.6.0
+        args:
+        - "--model"
+        - "casperhansen/llama-3-8b-instruct-awq"
+        - "--quantization"
+        - "awq"
+        - "--gpu-memory-utilization"
+        - "0.85"
+        - "--max-model-len"
+        - "4096"
+        ports:
+        - containerPort: 8000
+          name: http
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
+          requests:
+            nvidia.com/gpu: "1"
+        volumeMounts:
+        - mountPath: /root/.cache/huggingface
+          name: model-cache
+      volumes:
+      - name: model-cache
+        persistentVolumeClaim:
+          claimName: hf-model-cache-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-service
+  namespace: ai-stack
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    name: http
+  selector:
+    app: vllm-engine
