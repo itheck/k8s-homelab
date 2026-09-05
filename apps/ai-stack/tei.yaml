@@ -22,9 +22,24 @@ spec:
         args:
         - |
           pip install --no-cache-dir huggingface_hub
-          python -c "from huggingface_hub import snapshot_download; snapshot_download('nomic-ai/nomic-embed-text-v1.5', local_dir='/data/nomic-embed-text-v1.5')"
-          sed -i '/"n_positions":/d' /data/nomic-embed-text-v1.5/config.json
-          echo "Downloaded nomic-embed-text-v1.5 and stripped duplicate n_positions key."
+          python -c "
+          from huggingface_hub import snapshot_download
+          import json
+
+          snapshot_download('nomic-ai/nomic-embed-text-v1.5', local_dir='/data/nomic-embed-text-v1.5')
+
+          config_path = '/data/nomic-embed-text-v1.5/config.json'
+          with open(config_path, 'r') as f:
+              cfg = json.load(f)
+
+          if 'max_position_embeddings' in cfg:
+              del cfg['max_position_embeddings']
+
+          with open(config_path, 'w') as f:
+              json.dump(cfg, f, indent=2)
+
+          print('Successfully patched config.json for TEI Candle backend.')
+          "
         volumeMounts:
         - name: tei-model-cache
           mountPath: /data
