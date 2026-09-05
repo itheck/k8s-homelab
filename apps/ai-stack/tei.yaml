@@ -15,12 +15,25 @@ spec:
       labels:
         app: tei-engine
     spec:
+      initContainers:
+      - name: download-and-patch-nomic
+        image: python:3.11-slim
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          pip install --no-cache-dir huggingface_hub
+          python -c "from huggingface_hub import snapshot_download; snapshot_download('nomic-ai/nomic-embed-text-v1.5', local_dir='/data/nomic-embed-text-v1.5')"
+          sed -i '/"n_positions":/d' /data/nomic-embed-text-v1.5/config.json
+          echo "Downloaded nomic-embed-text-v1.5 and stripped duplicate n_positions key."
+        volumeMounts:
+        - name: tei-model-cache
+          mountPath: /data
       containers:
       - name: tei-engine
         image: ghcr.io/huggingface/text-embeddings-inference:86-1.9
         args:
         - "--model-id"
-        - "nomic-ai/nomic-embed-text-v1.5"
+        - "/data/nomic-embed-text-v1.5"
         - "--port"
         - "8080"
         - "--auto-truncate"
@@ -31,6 +44,7 @@ spec:
           requests:
             cpu: "1"
             memory: "2Gi"
+            nvidia.com/gpu: "1"
           limits:
             cpu: "4"
             memory: "8Gi"
