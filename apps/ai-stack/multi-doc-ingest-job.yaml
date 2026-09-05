@@ -1,0 +1,189 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: multi-doc-script
+  namespace: ai-stack
+data:
+  ingest.py: |
+    import os
+    import glob
+    import requests
+    import subprocess
+    import tempfile
+    import email
+    import docx
+    import pptx
+    import pandas as pd
+    from pypdf import PdfReader
+
+    TEI_URL = "http://tei-engine.ai-stack.svc.cluster.local:8080/embed"
+    QDRANT_URL = "http://qdrant.ai-stack.svc.cluster.local:6333"
+    COLLECTION_NAME = "archival_docs"
+    SOURCE_DIR = "/source_files"
+    CHUNK_SIZE = 1000
+    CHUNK_OVERLAP = 100
+
+    def init_qdrant_collection():
+        url = f"{QDRANT_URL}/collections/{COLLECTION_NAME}"
+        res = requests.get(url)
+        if res.status_code != 200:
+            print(f"Creating Qdrant collection '{COLLECTION_NAME}'...")
+            payload = {"vectors": {"size": 768, "distance": "Cosine"}}
+            r = requests.put(url, json=payload)
+            r.raise_for_status()
+
+    def get_embeddings(texts):
+        response = requests.post(TEI_URL, json={"inputs": texts}, headers={"Content-Type": "application/json"})
+        response.raise_for_status()
+        return response.json()
+
+    def chunk_text(text):
+        chunks = []
+        start = 0
+        while start < len(text):
+            end = start + CHUNK_SIZE
+            chunks.append(text[start:end])
+            start += CHUNK_SIZE - CHUNK_OVERLAP
+        return chunks
+
+    def extract_text(filepath):
+        ext = os.path.splitext(filepath)[1].lower()
+
+        # PDFs
+        if ext == ".pdf":
+            reader = PdfReader(filepath)
+            return "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
+
+        # Word Documents
+        elif ext in [".docx"]:
+            doc = docx.Document(filepath)
+            return "\n".join([p.text for p in doc.paragraphs if p.text])
+
+        # PowerPoint
+        elif ext in [".pptx"]:
+            prs = pptx.Presentation(filepath)
+            text = []
+            for slide in prs.slides:
+                for shape in slide.shapes:
+                    if hasattr(shape, "text"):
+                        text.append(shape.text)
+            return "\n".join(text)
+
+        # Excel
+        elif ext in [".xlsx", ".xls"]:
+            excel_data = pd.read_excel(filepath, sheet_name=None)
+            output = []
+            for sheet_name, df in excel_data.items():
+                output.append(f"Sheet: {sheet_name}\n" + df.to_csv(index=False))
+            return "\n\n".join(output)
+
+        # Outlook PST Archives
+        elif ext == ".pst":
+            temp_dir = tempfile.mkdtemp()
+            subprocess.run(["readpst", "-o", temp_dir, "-D", "-e", filepath], check=False)
+            emails = []
+            for root, _, files in os.walk(temp_dir):
+                for f_name in files:
+                    eml_path = os.path.join(root, f_name)
+                    try:
+                        with open(eml_path, "rb") as f:
+                            msg = email.message_from_binary_file(f)
+                            body = ""
+                            if msg.is_multipart():
+                                for part in msg.walk():
+                                    if part.get_content_type() == "text/plain":
+                                        body += part.get_payload(decode=True).decode("utf-8", errors="ignore") + "\n"
+                            else:
+                                body = msg.get_payload(decode=True).decode("utf-8", errors="ignore")
+                            emails.append(f"Subject: {msg.get('subject', '')}\nFrom: {msg.get('from', '')}\nDate: {msg.get('date', '')}\n\n{body}")
+                    except Exception:
+                        pass
+            return "\n--- EMAIL BREAK ---\n".join(emails)
+
+        # Plain Text / Markdown / Code / CSV / JSON
+        elif ext in [".txt", ".md", ".csv", ".json", ".yaml", ".yml", ".log", ".py", ".sh"]:
+            with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                return f.read()
+
+        return None
+
+    def process_files():
+        init_qdrant_collection()
+        all_files = glob.glob(f"{SOURCE_DIR}/**/*.*", recursive=True)
+        print(f"Found {len(all_files)} total files in {SOURCE_DIR}.")
+
+        point_id = 1
+        for filepath in all_files:
+            filename = os.path.basename(filepath)
+            try:
+                text = extract_text(filepath)
+                if not text or not text.strip():
+                    continue
+
+                print(f"Ingesting: {filename}")
+                chunks = chunk_text(text)
+                batch_size = 32
+
+                for i in range(0, len(chunks), batch_size):
+                    batch_chunks = chunks[i:i + batch_size]
+                    batch_vectors = get_embeddings(batch_chunks)
+
+                    points = []
+                    for chunk, vector in zip(batch_chunks, batch_vectors):
+                        points.append({
+                            "id": point_id,
+                            "vector": vector,
+                            "payload": {
+                                "filename": filename,
+                                "path": filepath,
+                                "extension": os.path.splitext(filename)[1].lower(),
+                                "text": chunk
+                            }
+                        })
+                        point_id += 1
+
+                    r = requests.put(
+                        f"{QDRANT_URL}/collections/{COLLECTION_NAME}/points",
+                        json={"points": points}
+                    )
+                    r.raise_for_status()
+
+            except Exception as e:
+                print(f"Skipping {filename}: {e}")
+
+        print("Universal batch ingestion completed!")
+
+    if __name__ == "__main__":
+        process_files()
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: multi-doc-batch-ingest
+  namespace: ai-stack
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: ingestor
+        image: python:3.11-slim
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          apt-get update && apt-get install -y pst-utils
+          pip install --no-cache-dir requests pypdf python-docx python-pptx openpyxl pandas
+          python /scripts/ingest.py
+        volumeMounts:
+        - name: script-vol
+          mountPath: /scripts
+        - name: file-storage
+          mountPath: /source_files
+      volumes:
+      - name: script-vol
+        configMap:
+          name: multi-doc-script
+      - name: file-storage
+        persistentVolumeClaim:
+          claimName: backup-hdd-pvc
