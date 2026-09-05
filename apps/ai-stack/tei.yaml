@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tei-engine
+  namespace: ai-stack
+  labels:
+    app: tei-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tei-engine
+  template:
+    metadata:
+      labels:
+        app: tei-engine
+    spec:
+      containers:
+      - name: tei-engine
+        image: ghcr.io/huggingface/text-embeddings-inference:cuda-1.5
+        args:
+        - "--model-id"
+        - "nomic-ai/nomic-embed-text-v1.5"
+        - "--port"
+        - "8080"
+        - "--auto-truncate"
+        ports:
+        - containerPort: 8080
+          name: http
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "4"
+            memory: "8Gi"
+            nvidia.com/gpu: "1"
+        volumeMounts:
+        - name: tei-model-cache
+          mountPath: /data
+      volumes:
+      - name: tei-model-cache
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tei-engine
+  namespace: ai-stack
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http
+  selector:
+    app: tei-engine
