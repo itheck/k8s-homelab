@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: tei-engine
-        image: ghcr.io/huggingface/text-embeddings-inference:cuda-1.5
+        image: ghcr.io/huggingface/text-embeddings-inference:86-1.9
         args:
         - "--model-id"
         - "nomic-ai/nomic-embed-text-v1.5"
