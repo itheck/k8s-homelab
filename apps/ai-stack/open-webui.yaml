@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: open-webui-pvc
+  namespace: ai-stack
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: open-webui
+  namespace: ai-stack
+  labels:
+    app: open-webui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: open-webui
+  template:
+    metadata:
+      labels:
+        app: open-webui
+    spec:
+      containers:
+      - name: open-webui
+        image: ghcr.io/open-webui/open-webui:main
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        # Chat Engine Configuration (vLLM)
+        - name: OPENAI_API_BASE_URL
+          value: "http://vllm-engine.ai-stack.svc.cluster.local:8000/v1"
+        - name: OPENAI_API_KEY
+          value: "sk-none"
+
+        # RAG Embedding Configuration (TEI)
+        - name: RAG_EMBEDDING_ENGINE
+          value: "openai"
+        - name: RAG_OPENAI_API_BASE_URL
+          value: "http://tei-engine.ai-stack.svc.cluster.local:8080/v1"
+        - name: RAG_OPENAI_API_KEY
+          value: "sk-none"
+        - name: RAG_EMBEDDING_MODEL
+          value: "/data/nomic-embed-text-v1.5"
+
+        # Vector Database Configuration (Qdrant)
+        - name: VECTOR_DB
+          value: "qdrant"
+        - name: QDRANT_URI
+          value: "http://qdrant.ai-stack.svc.cluster.local:6333"
+
+        # Feature Flags
+        - name: ENABLE_RAG_HYBRID_SEARCH
+          value: "true"
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+        volumeMounts:
+        - name: webui-data
+          mountPath: /app/backend/data
+      volumes:
+      - name: webui-data
+        persistentVolumeClaim:
+          claimName: open-webui-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: open-webui
+  namespace: ai-stack
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http
+  selector:
+    app: open-webui
