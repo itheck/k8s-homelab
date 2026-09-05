@@ -15,7 +15,7 @@ spec:
         app.kubernetes.io/name: dcgm-exporter
     spec:
       nodeSelector:
-        nvidia.com/gpu.present: "true" # Adjust selector to match your GPU node label if needed
+        nvidia.com/gpu.present: "true"
       containers:
       - name: exporter
         image: nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.0-ubuntu22.04
@@ -59,4 +59,3 @@ spec:
       app.kubernetes.io/name: dcgm-exporter
   endpoints:
   - port: metrics
-    interval: 15s
