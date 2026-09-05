@@ -6,11 +6,11 @@ spec:
   capacity:
     storage: 2Ti
   accessModes:
-    - ReadOnlyMany
+    - ReadWriteMany  # Changed from ReadOnlyMany
   persistentVolumeReclaimPolicy: Retain
   nfs:
     path: /mnt/backup-hdd
-    server: 10.0.0.11 # Replace with storage-pi static IP
+    server: 10.0.0.11
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -19,7 +19,7 @@ metadata:
   namespace: ai-stack
 spec:
   accessModes:
-    - ReadOnlyMany
+    - ReadWriteMany  # Changed from ReadOnlyMany
   resources:
     requests:
       storage: 2Ti
