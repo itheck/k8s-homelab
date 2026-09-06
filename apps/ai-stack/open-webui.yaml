@@ -44,7 +44,7 @@ spec:
         - name: RAG_EMBEDDING_ENGINE
           value: "openai"
         - name: RAG_OPENAI_API_BASE_URL
-          value: "http://tei-engine.ai-stack.svc.cluster.local:8080/v1"
+          value: "http://10.96.193.113:8080/v1"
         - name: RAG_OPENAI_API_KEY
           value: "sk-none"
         - name: RAG_EMBEDDING_MODEL
@@ -54,7 +54,19 @@ spec:
         - name: VECTOR_DB
           value: "qdrant"
         - name: QDRANT_URI
-          value: "http://qdrant.ai-stack.svc.cluster.local:6333"
+          value: "http://10.96.41.25:6333"
+        - name: QDRANT_COLLECTION_NAME
+          value: "archival_docs"
+      # Feature Flags
+        - name: ENABLE_RAG_HYBRID_SEARCH
+          value: "true"
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"
 
         # Feature Flags
         - name: ENABLE_RAG_HYBRID_SEARCH
