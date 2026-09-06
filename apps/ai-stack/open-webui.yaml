@@ -57,7 +57,7 @@ spec:
           value: "http://10.96.41.25:6333"
         - name: QDRANT_COLLECTION_NAME
           value: "archival_docs"
-      # Feature Flags
+        # Feature Flags
         - name: ENABLE_RAG_HYBRID_SEARCH
           value: "true"
       resources:
