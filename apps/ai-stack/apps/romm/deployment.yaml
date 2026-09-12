@@ -27,6 +27,45 @@ spec:
     requests:
       storage: 20Gi
 ---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: romm-db
+  namespace: games
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: romm-db
+  template:
+    metadata:
+      labels:
+        app: romm-db
+    spec:
+      containers:
+      - name: mariadb
+        image: mariadb:11
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "rommrootpass123"
+        - name: MYSQL_DATABASE
+          value: "romm"
+        - name: MYSQL_USER
+          value: "rommuser"
+        - name: MYSQL_PASSWORD
+          value: "rommpass123"
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: db-data
+      volumes:
+      - name: db-data
+        persistentVolumeClaim:
+          claimName: romm-db-pvc
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
