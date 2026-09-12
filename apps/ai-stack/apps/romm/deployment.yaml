@@ -30,39 +30,55 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: romm-db
+  name: romm
   namespace: games
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: romm-db
+      app: romm
   template:
     metadata:
       labels:
-        app: romm-db
+        app: romm
     spec:
       containers:
-      - name: mariadb
-        image: mariadb:11
+      - name: romm
+        image: rommapp/romm:latest
         env:
-        - name: MYSQL_ROOT_PASSWORD
-          value: "rommrootpass123"
-        - name: MYSQL_DATABASE
-          value: "romm"
-        - name: MYSQL_USER
+        - name: DB_HOST
+          value: "romm-db"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_USER
           value: "rommuser"
-        - name: MYSQL_PASSWORD
+        - name: DB_PASSWD
           value: "rommpass123"
+        - name: DB_NAME
+          value: "romm"
+        - name: ROMM_DB_DRIVER
+          value: "mariadb"
+        - name: ROMM_AUTH_SECRET_KEY
+          value: "heckworks_secret_key_837291038"
         ports:
-        - containerPort: 3306
+        - containerPort: 8080
         volumeMounts:
-        - mountPath: /var/lib/mysql
-          name: db-data
+        - mountPath: /romm/library
+          name: roms-nfs
+        - mountPath: /romm/resources
+          name: data
+          subPath: resources
+        - mountPath: /romm/config
+          name: data
+          subPath: config
       volumes:
-      - name: db-data
+      - name: data
         persistentVolumeClaim:
-          claimName: romm-db-pvc
+          claimName: romm-pvc
+      - name: roms-nfs
+        nfs:
+          server: storage-pi
+          path: "/mnt/backup-hdd/Tech Projects/RetroPie"
 ---
 apiVersion: v1
 kind: Service
