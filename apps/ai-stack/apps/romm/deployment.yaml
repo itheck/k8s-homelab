@@ -6,6 +6,18 @@ metadata:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
+  name: romm-db-pvc
+  namespace: games
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
   name: romm-pvc
   namespace: games
 spec:
@@ -46,12 +58,11 @@ spec:
         - containerPort: 3306
         volumeMounts:
         - mountPath: /var/lib/mysql
-          name: data
-          subPath: db-data
+          name: db-data
       volumes:
-      - name: data
+      - name: db-data
         persistentVolumeClaim:
-          claimName: romm-pvc
+          claimName: romm-db-pvc
 ---
 apiVersion: v1
 kind: Service
