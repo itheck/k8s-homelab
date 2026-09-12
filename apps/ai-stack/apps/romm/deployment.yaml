@@ -160,7 +160,7 @@ metadata:
   name: romm-ingress
   namespace: games
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   rules:
   - host: games.heckworks.it.com
     http:
