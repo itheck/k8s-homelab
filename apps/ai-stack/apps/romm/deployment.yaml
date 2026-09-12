@@ -27,7 +27,6 @@ spec:
     requests:
       storage: 20Gi
 ---
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -64,7 +63,17 @@ spec:
       - name: db-data
         persistentVolumeClaim:
           claimName: romm-db-pvc
-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: romm-db
+  namespace: games
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: romm-db
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -118,67 +127,6 @@ spec:
         nfs:
           server: 10.0.0.11
           path: "/mnt/backup-hdd/Tech Projects/RetroPie"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: romm-db
-  namespace: games
-spec:
-  ports:
-  - port: 3306
-  selector:
-    app: romm-db
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: romm
-  namespace: games
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: romm
-  template:
-    metadata:
-      labels:
-        app: romm
-    spec:
-      containers:
-      - name: romm
-        image: rommapp/romm:latest
-        env:
-        - name: DB_HOST
-          value: "romm-db"
-        - name: DB_PORT
-          value: "3306"
-        - name: DB_USER
-          value: "rommuser"
-        - name: DB_PASSWD
-          value: "rommpass123"
-        - name: DB_NAME
-          value: "romm"
-        - name: ROMM_DB_DRIVER
-          value: "mariadb"
-        - name: ROMM_AUTH_SECRET_KEY
-          value: "heckworks_secret_key_837291038"
-        ports:
-        - containerPort: 8080
-        volumeMounts:
-        - mountPath: /romm/library
-          name: data
-          subPath: library
-        - mountPath: /romm/resources
-          name: data
-          subPath: resources
-        - mountPath: /romm/config
-          name: data
-          subPath: config
-      volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: romm-pvc
 ---
 apiVersion: v1
 kind: Service
