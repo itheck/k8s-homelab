@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: multi-doc-batch-ingest
+  namespace: ai-stack
+spec:
+  template:
+    spec:
+      hostNetwork: true
+      containers:
+      - name: ingestor
+        image: python:3.11-slim
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            apt-get update && apt-get install -y pst-utils
+            pip install --no-cache-dir requests pypdf python-docx python-pptx openpyxl pandas xlrd
+            python /scripts/ingest.py
+        volumeMounts:
+        - name: script-vol
+          mountPath: /scripts
+        - name: file-storage
+          mountPath: /source_files
+      restartPolicy: Never
+      volumes:
+      - name: script-vol
+        configMap:
+          name: multi-doc-script
+      - name: file-storage
+        persistentVolumeClaim:
+          claimName: backup-hdd-pvc
+  ttlSecondsAfterFinished: 600
