@@ -109,9 +109,9 @@ spec:
         - name: ROMM_AUTH_SECRET_KEY
           value: "heckworks_secret_key_837291038"
         - name: IGDB_CLIENT_ID
-          value: oo2vigz3c2gc3efncyda5b4r4xiwdv
+          value: "oo2vigz3c2gc3efncyda5b4r4xiwdv"
         - name: IGDB_CLIENT_SECRET
-          value: tz7zpj2c93hiym77y7okppfad0hp10
+          value: "tz7zpj2c93hiym77y7okppfad0hp10"
         ports:
         - containerPort: 8080
         volumeMounts:
