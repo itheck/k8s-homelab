@@ -111,7 +111,7 @@ spec:
         - name: IGDB_CLIENT_ID
           value: "oo2vigz3c2gc3efncyda5b4r4xiwdv"
         - name: IGDB_CLIENT_SECRET
-          value: "tz7zpj2c93hiym77y7okppfad0hp10"
+          value: "kzbr044r1ouezavlg1xr5tpcy06fx9"
         ports:
         - containerPort: 8080
         volumeMounts:
