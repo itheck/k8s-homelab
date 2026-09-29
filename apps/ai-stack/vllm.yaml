@@ -57,7 +57,7 @@ spec:
       volumes:
         - name: model-cache
           persistentVolumeClaim:
-            claimName: vllm-hf-cache-pvc
+            claimName: hf-model-cache-pvc
 ---
 apiVersion: v1
 kind: Service
