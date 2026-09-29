@@ -24,7 +24,7 @@ spec:
             - "--model"
             - "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ"
             - "--quantization"
-            - "awq"
+            - "awq_marlin"
             - "--gpu-memory-utilization"
             - "0.75"
             - "--max-model-len"
@@ -62,13 +62,35 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: vllm-service
+  name: vllm-qwen-coder
   namespace: ai-stack
+  labels:
+    app: vllm-qwen-coder
 spec:
   type: ClusterIP
-  selector:
-    app: vllm-qwen-coder
   ports:
-    - protocol: TCP
+    - name: http
       port: 8000
       targetPort: 8000
+      protocol: TCP
+  selector:
+    app: vllm-qwen-coder
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vllm-qwen-coder
+  namespace: ai-stack
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: heckchat.heckworks.it.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vllm-qwen-coder
+                port:
+                  number: 8000
