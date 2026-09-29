@@ -1,65 +1,74 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vllm-engine
+  name: vllm-qwen-coder
   namespace: ai-stack
   labels:
-    app: vllm-engine
+    app: vllm-qwen-coder
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
-      app: vllm-engine
+      app: vllm-qwen-coder
   template:
     metadata:
       labels:
-        app: vllm-engine
+        app: vllm-qwen-coder
     spec:
       containers:
         - name: vllm
           image: vllm/vllm-openai:v0.6.3
           args:
-            - "--host"
-            - "0.0.0.0"
-            - "--port"
-            - "8000"
             - "--model"
-            - "casperhansen/llama-3-8b-instruct-awq"
+            - "Qwen/Qwen2.5-Coder-7B-Instruct-AWQ"
             - "--quantization"
             - "awq"
             - "--gpu-memory-utilization"
-            - "0.85"
+            - "0.75"
             - "--max-model-len"
-            - "4096"
-            - "--enable-auto-tool-choice"
+            - "8192"
+            - "--enable-auto-tool-call"
             - "--tool-call-parser"
-            - "llama3_json"
+            - "qwen"
+          env:
+            - name: HUGGING_FACE_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-token-secret
+                  key: token
+                  optional: true
           ports:
             - containerPort: 8000
               name: http
           resources:
             limits:
               nvidia.com/gpu: "1"
+              memory: 16Gi
+              cpu: "4"
             requests:
               nvidia.com/gpu: "1"
+              memory: 8Gi
+              cpu: "2"
           volumeMounts:
-            - mountPath: /root/.cache/huggingface
-              name: model-cache
+            - name: model-cache
+              mountPath: /root/.cache/huggingface
       volumes:
         - name: model-cache
           persistentVolumeClaim:
-            claimName: hf-model-cache-pvc
+            claimName: vllm-hf-cache-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: vllm-engine
+  name: vllm-service
   namespace: ai-stack
 spec:
   type: ClusterIP
-  ports:
-    - port: 8000
-      targetPort: 8000
-      name: http
   selector:
-    app: vllm-engine
+    app: vllm-qwen-coder
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
