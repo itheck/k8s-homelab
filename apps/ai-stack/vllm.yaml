@@ -86,18 +86,28 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: vllm-qwen-coder
+  name: heckchat-ingress
   namespace: ai-stack
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "true"
 spec:
-  ingressClassName: cloudflare-tunnel
   rules:
-    - host: heckchat.heckworks.it.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: vllm-qwen-coder
-                port:
-                  number: 8000
+  - host: heckchat.heckworks.it.com
+    http:
+      paths:
+      # Send API traffic to vLLM
+      - path: /v1
+        pathType: Prefix
+        backend:
+          service:
+            name: vllm-qwen-coder
+            port:
+              number: 8000
+      # Send UI traffic to Open WebUI
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: open-webui
+            port:
+              number: 8080
