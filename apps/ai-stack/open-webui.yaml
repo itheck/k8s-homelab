@@ -36,9 +36,9 @@ spec:
         env:
         # Chat Engine Configuration (vLLM)
         - name: OPENAI_API_BASE_URL
-          value: "http://vllm-engine.ai-stack.svc.cluster.local:8000/v1"
+          value: "http://vllm-qwen-coder.ai-stack.svc.cluster.local:8000/v1"
         - name: OPENAI_API_KEY
-          value: "sk-none"
+          value: "k77yIJ9mBf8ZVaBtfbTnsgK+p00FgamQsnj4/8UDrBw="
 
         # RAG Embedding Configuration (TEI)
         - name: RAG_EMBEDDING_ENGINE
@@ -46,7 +46,7 @@ spec:
         - name: RAG_OPENAI_API_BASE_URL
           value: "http://10.96.193.113:8080/v1"
         - name: RAG_OPENAI_API_KEY
-          value: "sk-none"
+          value: "k77yIJ9mBf8ZVaBtfbTnsgK+p00FgamQsnj4/8UDrBw="
         - name: RAG_EMBEDDING_MODEL
           value: "/data/nomic-embed-text-v1.5"
 
