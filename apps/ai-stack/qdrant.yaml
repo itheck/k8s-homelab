@@ -26,10 +26,10 @@ spec:
         resources:
           requests:
             cpu: "500m"
-            memory: "4Gi"
+            memory: "2Gi"
           limits:
             cpu: "2"
-            memory: "4Gi"
+            memory: "8Gi" #increased from 4Gi to give index builds enought headroom - 9.30.2026
         volumeMounts:
         - name: qdrant-storage
           mountPath: /qdrant/storage
