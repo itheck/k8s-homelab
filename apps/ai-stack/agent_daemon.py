@@ -43,7 +43,8 @@ class EmailAgentDaemon:
     async def run_poll_cycle(self):
         logger.info("Starting 24/7 email polling cycle...")
         try:
-            await self.outlook_agent.process_all_accounts()
+            emails = await self.outlook_agent.fetch_recent_emails(top_n=5)
+            logger.info(f"Fetched {len(emails) if emails else 0} emails successfully.")
             logger.info("Polling cycle completed successfully.")
         except Exception as e:
             logger.error(f"Error encountered during polling cycle: {e}", exc_info=True)
