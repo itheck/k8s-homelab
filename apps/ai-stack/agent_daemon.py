@@ -14,7 +14,7 @@ logging.basicConfig(
 logger = logging.getLogger("agent_daemon")
 
 try:
-    from agent_outlook import OutlookAgentBridge
+    from agent_worker import AIAgentWorker
     from agent_memory import AgentMemory
 except ImportError as e:
     logger.error(f"Failed to import required local modules: {e}")
@@ -35,17 +35,20 @@ class EmailAgentDaemon:
 
         logger.info("Initializing Qdrant Memory Manager...")
         self.memory = AgentMemory()
-
-        logger.info("Initializing Outlook Agent Bridge...")
-        self.outlook_agent = OutlookAgentBridge()
-        logger.info("Outlook Agent Bridge successfully initialized.")
+        logger.info("Email Agent Daemon initialized successfully.")
 
     async def run_poll_cycle(self):
-        logger.info("Starting 24/7 email polling cycle...")
+        logger.info("Starting 24/7 email polling cycle for all target users...")
         try:
-            emails = await self.outlook_agent.fetch_recent_emails(top_n=5)
-            logger.info(f"Fetched {len(emails) if emails else 0} emails successfully.")
-            logger.info("Polling cycle completed successfully.")
+            target_users_env = os.getenv("TARGET_OUTLOOK_USERS", "israel_heck@outlook.com,thriftlikeheck1@outlook.com")
+            target_users = [user.strip() for user in target_users_env.split(",")]
+
+            for user in target_users:
+                logger.info(f"Processing inbox task for: {user}")
+                worker = AIAgentWorker(target_user=user)
+                await worker.process_inbox_task()
+
+            logger.info("Polling cycle completed successfully for all accounts.")
         except Exception as e:
             logger.error(f"Error encountered during polling cycle: {e}", exc_info=True)
 
